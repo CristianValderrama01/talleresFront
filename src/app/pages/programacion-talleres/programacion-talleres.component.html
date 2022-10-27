@@ -1,163 +1,248 @@
-<mat-card style="margin: 30px;" class="example-card">
+<div class="container">
+  <div class="row">
 
-  <form [formGroup]="formDatosTallerista">
+    <mat-card class="">
+      <div fxLayout="row" fxLayoutAlign="end center">
+        <form [formGroup]="cabeceroForm">
 
-    <div fxLayout="row" fxLayoutAlign="end center">
+          <mat-label class="color-label">Administrador: </mat-label>
+          <mat-form-field class="" appearance="outline">
+            <mat-select formControlName="usuario">
+              <mat-option *ngFor="let item of personas" [value]="item">
+                USUARIO
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <span>---</span>
+          <mat-label class="color-label"></mat-label>
+          <mat-form-field class="" appearance="outline">
+            <mat-select formControlName="unidadOperativa">
+              <mat-option *ngFor="let item of unidadesOperativas" (click)="resetearforms()" (click)="obtenerCiram()"
+                [value]="item">
+                {{item.descUnidad}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
 
-      <mat-label class="color-label">Tallerista: </mat-label>
-      <mat-form-field class="" appearance="outline">
-        <mat-select formControlName="tallerista">
-          <mat-option *ngFor="let item of talleristas" [value]="item">
-            {{item.nombres}} {{item.apePaterno}} {{item.apeMaterno}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+        </form>
+      </div>
 
-    </div>
+      <mat-card-title class="tutulo">Registro programacion de talleres</mat-card-title>
 
-    <mat-card-title class="tutulo">Registro de asistencia de talleres</mat-card-title>
+      <br><br>
 
-    <br>
+      <!-- ------------------------------ FORMULARIO 1 ------------------------------ -->
+      <form [formGroup]="tallerHorariosCabForm">
 
-    <mat-label class="color-label">Nombre del taller: </mat-label>
-    <mat-form-field class="container" appearance="outline">
-      <mat-select formControlName="taller">
-        <mat-option *ngFor="let item of talleres" [value]="item">
-          {{item.codTaller}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+        <!--
+            <div [hidden]="true">mat-form
+              <mat-form-field class="mat-form">
+                <mat-label>ID</mat-label>
+                <input matInput type="text" placeholder="ID" >
+              </mat-form-field>
+            </div> -->
 
-    <br>
-    <!-- ------------------------------ FORMULARIO 1 ------------------------------ -->
 
-    <!--
-    <div [hidden]="true">
-      <mat-form-field class="container">
-        <mat-label>ID</mat-label>
-        <input matInput type="text" placeholder="ID" >
-      </mat-form-field>
-    </div> -->
+        <div class="row">
+          <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Nombre del taller: </mat-label>
+            <!-- </div>
+          <div class="col-12 col-sm-2"> -->
+            <mat-form-field class="" appearance="outline">
+              <mat-select formControlName="taller">
+                <mat-option *ngFor="let item of talleres" (click)="resetearforms()" [value]="item">
+                  {{item.codTaller}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
 
-    <mat-label class="color-label">Modalidad: </mat-label>
-    <mat-form-field class="">
-      <input matInput type="text" placeholder="" formControlName="modalidad">
-    </mat-form-field>
+          <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Modalidad: </mat-label>
+            <!-- </div>
+          <div class="col-12 col-sm-2"> -->
+            <mat-form-field class="" appearance="outline">
+              <mat-select formControlName="modalidad">
+                <mat-option *ngFor="let item of modalidades" (click)="resetearforms()" [value]="item.nombre">
+                  {{item.nombre}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
 
-    <br>
+          <!-- <div class="col-12 col-sm-2">
+            <mat-form-field class="" appearance="outline">
+              <input matInput type="text" placeholder="" formControlName="modalidad">
+            </mat-form-field>
+          </div>-->
+        </div>
 
-    <mat-label class="color-label">Fecha de Registro: </mat-label>
-    <mat-form-field class="container" appearance="outline">
-      <mat-label></mat-label>
-      <input matInput [matDatepicker]="pickerStartDate" formControlName="fechaRegistro">
-      <mat-datepicker-toggle matSuffix [for]="pickerStartDate"></mat-datepicker-toggle>
-      <mat-datepicker #pickerStartDate></mat-datepicker>
-    </mat-form-field>
 
-    <button mat-raised-button type="button" color="primary" [disabled]="formDatosTallerista.invalid"
-      (click)="buscarTaller()">Buscar</button>
+        <br>
+        <div class="row">
 
-  </form>
+          <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Fecha de Inicio: </mat-label>
+            <mat-form-field class="" appearance="outline">
+              <mat-label></mat-label>
+              <input matInput [matDatepicker]="pickerStartDate" formControlName="fecInicio"
+                (dateChange)="resetearforms()" (dateChange)="compararfechas()">
+              <mat-datepicker-toggle matSuffix [for]="pickerStartDate"></mat-datepicker-toggle>
+              <mat-datepicker #pickerStartDate></mat-datepicker>
+            </mat-form-field>
+          </div>
 
-  <br>
+          <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Fecha de Fin: </mat-label>
+            <mat-form-field class="" appearance="outline">
+              <mat-label></mat-label>
+              <input matInput [matDatepicker]="pickerEndtDate" formControlName="fecFin" (dateChange)="resetearforms()"
+                (dateChange)="compararfechas()">
+              <mat-datepicker-toggle matSuffix [for]="pickerEndtDate"></mat-datepicker-toggle>
+              <mat-datepicker #pickerEndtDate></mat-datepicker>
+            </mat-form-field>
+          </div>
 
-  <form [formGroup]="formTallerDet">
+        </div>
 
-    <label class="color-label">Hora del taller: </label>
+        <br>
 
-    <mat-radio-group class="color-label" formControlName="horaTaller">
-      <mat-radio-button class="date_space" *ngFor="let item of tallerDetHoras" [value]="item">
-        {{item.horaIni | date: 'shortTime'}} - {{item.horaFin | date: 'shortTime'}}
-      </mat-radio-button>
-      <label class="date_space"></label>
-    </mat-radio-group>
+        <div class="row">
+          <div class="col-12 col-sm-6">
 
-  </form>
+            <mat-label class="color-label">Ciram Asociado: </mat-label>
+            <mat-form-field class="" appearance="outline">
+              <mat-select formControlName="ciram">
+                <mat-option *ngFor="let item of unidadesOperativasHijas" (click)="resetearforms()" [value]="item">
+                  {{item.descUnidad}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
 
-  <br><br>
+            <button mat-raised-button color="primary" (click)="agregar()"
+              [disabled]="tallerHorariosCabForm.invalid || flatFecha">Agregar</button>
+          </div>
+        </div>
 
-  <form [formGroup]="formAsegurado">
 
-    <mat-label class="color-label">Tipo de Doc: </mat-label>
-    <mat-form-field class="" appearance="outline">
-      <mat-select formControlName="tipoDoc">
-        <mat-option *ngFor="let item of tipoDocumento" [value]="item">
-          {{item.nombre}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
 
-    <!-- <mat-label class="color-label">Tipo Doc: </mat-label>
-    <mat-form-field class="container" appearance="outline">
-      <input matInput type="number" placeholder="" formControlName="tipoDoc">
-    </mat-form-field> -->
+      </form>
 
-    <mat-label class="color-label">Nro. Doc: </mat-label>
-    <mat-form-field class="container" appearance="outline">
-      <input matInput type="number" placeholder="" formControlName="numDoc">
-    </mat-form-field>
+      <h2 class="fondo-azul"> {{tallerEtiqueta}} </h2>
 
-    <button mat-raised-button type="button" color="primary" [disabled]="tipoDoc.invalid || numDoc.invalid"
-      (click)="buscarAsegurado()">Buscar</button>
+      <!-- ------------------------------ FORMULARIO 2 ------------------------------ -->
+      <form [formGroup]="personaForm">
+        <div class="row">
+          <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Tipo de Doc: </mat-label>
+            <mat-form-field class="" appearance="outline">
+              <mat-select formControlName="tipoDoc">
+                <mat-option *ngFor="let item of tipoDocumento" [value]="item.idParametro">
+                  {{item.nombre}}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
 
-    <br>
+          <!-- <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Tipo de Doc: </mat-label>
+            <mat-form-field class="" appearance="outline">
+              <input matInput type="text" placeholder="" formControlName="tipoDoc">
+            </mat-form-field>
+          </div> -->
 
-    <mat-label class="color-label">Asegurado: </mat-label>
-    <mat-form-field class="container">
-      <input matInput type="text" placeholder="" formControlName="asegurado">
-    </mat-form-field>
+          <div class="col-12 col-sm-6">
+            <mat-label class="color-label">Nro. de Doc: </mat-label>
+            <mat-form-field class="" appearance="outline">
+              <input matInput type="number" placeholder="" formControlName="numDoc">
+            </mat-form-field>
 
-    <button mat-raised-button type="button" color="primary"
-      [disabled]="formDatosTallerista.invalid || formTallerDet.invalid || asegurado.invalid"
-      (click)="agregar()">Agregar</button>
+            <button mat-raised-button type="button" color="primary"
+              [disabled]="tipoDoc.invalid || numDoc.invalid || flatBotonBuscar" (click)="buscar()">Buscar</button>
+          </div>
+        </div>
 
-  </form>
+        <div [hidden]="true">
+          <mat-label class="color-label">Nombres y apellidos: </mat-label>
+          <mat-form-field class="mat-form" >
+            <input matInput type="text" placeholder="" formControlName="nombres">
+          </mat-form-field>
+        </div>
 
-  <br> <br>
+        <mat-label class="color-label">Nombres y apellidos: </mat-label>
+        <mat-form-field class="mat-form" >
+          <input matInput type="text" placeholder="" disabled value="{{nombreApellido}}">
+        </mat-form-field>
 
-  <h2 class="participantes">Participantes</h2>
+      </form>
 
-  <!-- ------------------------------ TABLA ------------------------------ -->
-  <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+      <!-- ------------------------------ FORMULARIO 3 ------------------------------ -->
+      <form [formGroup]="tallerHorariosDetForm">
 
-    <ng-container matColumnDef="numero">
-      <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> </mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let element; let i = index"> {{i + 1}} </mat-cell>
-    </ng-container>
+        <br>
 
-    <ng-container matColumnDef="tipoDoc">
-      <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> Tipo de Doc. </mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let element"> {{element.asegurado.tipoDocumento}} </mat-cell>
-    </ng-container>
+        <mat-label class="color-label ">Hora Inicio de Taller: </mat-label>
+        <input type="time" class="margen-hora" formControlName="horaIni" (change)="compararfechas()">
 
-    <ng-container matColumnDef="numDoc">
-      <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> Nro de Doc. </mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let element"> {{element.asegurado.numDoc}} </mat-cell>
-    </ng-container>
+        <mat-label class="color-label">Hora Fin de Taller: </mat-label>
+        <input type="time" class="margen-hora" formControlName="horaFin" (change)="compararfechas()">
 
-    <ng-container matColumnDef="nombre">
-      <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> Nombre </mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let element">
-        {{element.asegurado.nombres}} {{element.asegurado.apellidoPaterno}} {{element.asegurado.apellidoMaterno}}
-      </mat-cell>
-    </ng-container>
+        <br><br>
 
-    <ng-container matColumnDef="acciones">
-      <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> </mat-header-cell>
-      <mat-cell mat-cell *matCellDef="let element; let i = index"> <button mat-flat-button
-          (click)="eliminar(i)">Eliminar</button> </mat-cell>
-    </ng-container>
+        <mat-label class="color-label">Fecha a Dictar: </mat-label>
+        <mat-form-field class="mat-form" appearance="outline">
+          <input matInput [min]="fecInicio.value" [max]="fecFin.value" [matDatepicker]="pickerDate"
+            formControlName="dia" (dateChange)="compararfechas()">
+          <mat-datepicker-toggle matSuffix [for]="pickerDate"></mat-datepicker-toggle>
+          <mat-datepicker #pickerDate></mat-datepicker>
+        </mat-form-field>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row matRipple *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        <button mat-raised-button color="primary"
+          [disabled]="tallerHorariosCabForm.invalid || nombres.invalid|| tallerHorariosDetForm.invalid || flatBotonAgregarHorario"
+          (click)="agregarHorario()">Agregar Horario</button>
 
-  </mat-table>
 
-  <div fxLayout="row" fxLayoutAlign="center center">
-    <button mat-raised-button type="button" color="primary" [disabled]="dataSource.data.length == 0"
-      (click)="guardarAsistencia()">Guardar Asistencia</button>
-    <button mat-raised-button type="button" color="primary" routerLink="/home">Salir</button>
+
+      </form>
+
+      <!-- ------------------------------ TABLA ------------------------------ -->
+      <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+
+        <ng-container matColumnDef="numero">
+          <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> </mat-header-cell>
+          <mat-cell mat-cell *matCellDef="let element; let i = index"> {{i+1}} </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="dia">
+          <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> Dia </mat-header-cell>
+          <mat-cell mat-cell *matCellDef="let element"> {{element.tallerHorariosDet.dia | date: 'd/M/yyy'}} </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="horario">
+          <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> Horario </mat-header-cell>
+          <mat-cell mat-cell *matCellDef="let element"> {{element.tallerHorariosDet.horaIni | date: 'shortTime'}} -
+            {{element.tallerHorariosDet.horaFin | date: 'shortTime'}}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="acciones">
+          <mat-header-cell mat-header-cell *matHeaderCellDef class="fondo-azul"> </mat-header-cell>
+          <mat-cell mat-cell *matCellDef="let element; let i = index"> <button mat-flat-button
+              (click)="eliminar(i)">Eliminar</button> </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row matRipple *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+      </mat-table>
+
+      <div fxLayout="row" fxLayoutAlign="center center">
+        <button mat-raised-button type="button" color="primary" [disabled]="dataSource.data.length == 0"
+          (click)="guardarProgramacion()">Guardar
+          Programacion</button>
+        <button mat-raised-button type="button" color="primary" routerLink="/home">Salir</button>
+      </div>
+
+    </mat-card>
   </div>
 
-
-</mat-card>
+</div>

@@ -12,13 +12,15 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ProgramacionTalleresComponent } from './pages/programacion-talleres/programacion-talleres.component';
 import { AsistenciaTalleresComponent } from './pages/asistencia-talleres/asistencia-talleres.component';
 import { HomeComponent } from './pages/home/home.component';
+import { DialogConfirmacionComponent } from './shared/dialog-confirmacion/dialog-confirmacion.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ProgramacionTalleresComponent,
     AsistenciaTalleresComponent,
-    HomeComponent
+    HomeComponent,
+    DialogConfirmacionComponent
   ],
   imports: [
     BrowserModule,

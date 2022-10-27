@@ -8,14 +8,14 @@ const routes: Routes = [
 
   {path: "", pathMatch: "full", redirectTo: "home"},
 
-  {path: "asistencia-talleres",
-  component: ProgramacionTalleresComponent},
-
   {path: "home",
   component: HomeComponent},
 
+  {path: "asistencia-talleres",
+  component: AsistenciaTalleresComponent},
+
   {path: "programacion-talleres",
-  component: AsistenciaTalleresComponent}
+  component: ProgramacionTalleresComponent}
 ];
 
 @NgModule({

@@ -1,9 +1,16 @@
+.date_space{
+  margin: 0px 10px;
+}
+
 .tutulo{
   color: #3f51b5;
 }
 
+.participantes{
+  color: #3f51b5;
+}
+
 .fondo-azul{
-  text-align: center;
   background-color: #3f51b5;
   color: white;
 }
@@ -12,18 +19,20 @@
   margin: 10px;
 }
 
-.mat-form{
+.container{
   margin-right: 2%;
   width: 35%;
 }
 
-.input-minimize{
-  width: 70%;
+.color-label{
   color: #3f51b5;
 }
 
-.color-label{
-  color: #3f51b5;
+.regillla{
+  display: grid;
+  gap: 1rem;
+  grid-auto-rows: 22rem;
+  grid-template-columns: repeat(grid-auto-rows, minmax(15rem, 1fr));
 }
 
 .card{
@@ -32,10 +41,6 @@
 
 .espacio{
   flex: 1 1 auto;
-}
-
-.margen-hora{
-  margin-right: 2%;
 }
 
 

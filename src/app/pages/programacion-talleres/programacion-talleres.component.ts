@@ -1,98 +1,122 @@
+import { DialogConfirmacionComponent } from './../../shared/dialog-confirmacion/dialog-confirmacion.component';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { RelacionesCiramService } from './../../core/_service/relaciones-ciram.service';
+import { Usuario } from './../../core/_model/usuario';
 import { Parametro } from './../../core/_model/parametro';
 import { ParametroService } from './../../core/_service/parametro.service';
-import { AsistenciaService } from './../../core/_service/asistencia.service';
-import { Asistencia } from './../../core/_model/asistencia';
-import { UnidadOperativaService } from './../../core/_service/unidad-operativa.service';
-import { Asegurado } from './../../core/_model/asegurado';
-import { AseguradoService } from './../../core/_service/asegurado.service';
-import { TallerHorariosDet } from './../../core/_model/taller-horarios-det';
 import { TallerHorariosDetService } from './../../core/_service/taller-horarios-det.service';
-import { BuscarTallerCabDTO } from './../../core/_DTO/buscar-taller-cab-dto';
 import { TallerHorariosCabService } from './../../core/_service/taller-horarios-cab.service';
+import { TallerHorariosDet } from './../../core/_model/taller-horarios-det';
+import { RegistroTalleresDTO } from './../../core/_DTO/registro-talleres-dto';
 import { PersonaService } from './../../core/_service/persona.service';
 import { Persona } from './../../core/_model/persona';
-import { Talleres } from './../../core/_model/talleres';
+import { TallerHorariosCab } from './../../core/_model/taller-horarios-cab';
 import { TalleresService } from './../../core/_service/talleres.service';
-import { MatTableDataSource } from '@angular/material/table';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Talleres } from './../../core/_model/talleres';
+import { UnidadOperativaService } from './../../core/_service/unidad-operativa.service';
+import { UnidadOperativa } from './../../core/_model/unidad-operativa';
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatTableDataSource } from '@angular/material/table';
 import * as moment from 'moment';
-import { map } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-programacion-talleres',
-  templateUrl: './programacion-talleres.component.html',
-  styleUrls: ['./programacion-talleres.component.css']
-})
-export class ProgramacionTalleresComponent implements OnInit {
-
+    selector: 'app-programacion-talleres',
+    templateUrl: './programacion-talleres.component.html',
+    styleUrls: ['./programacion-talleres.component.css']
+  })
+  export class ProgramacionTalleresComponent implements OnInit {
   displayedColumns: string[] = [
     'numero',
-    'tipoDoc',
-    'numDoc',
-    'nombre',
+    'dia',
+    'horario',
     'acciones'
   ];
+  tallerEtiqueta: string = "-------------------------"
+  nombreApellido: string;
+
+  usuarioCab: Usuario
+  personaCab: Persona;
+
+  flatBotonBuscar: boolean = true;
+  flatBotonAgregarHorario: boolean = true;
+  flatFecha: boolean = false;
 
   talleres: Talleres[];
-  talleristas: Persona[];
+  modalidades: Parametro[];
+  unidadesOperativas: UnidadOperativa[];
+  unidadesOperativasHijas: UnidadOperativa[] = [];
+  unidadesOperativasPadres: UnidadOperativa[] = [];
   tipoDocumento: Parametro[];
-  tallerDetHoras: TallerHorariosDet[];
-  asegurados: Asegurado[] = [];
-  asistencias: Asistencia[] = [];
+  registroTalleresDTO: RegistroTalleresDTO[] = [];
+  horariosTalleres: RegistroTalleresDTO = new RegistroTalleresDTO();
 
-  aseguradoEncontrado: Asegurado
+  personaForm: FormGroup;
+  cabeceroForm: FormGroup;
+  tallerHorariosCabForm: FormGroup;
+  tallerHorariosDetForm: FormGroup;
 
-  dataSource: MatTableDataSource<Asistencia> = new MatTableDataSource<Asistencia>(this.asistencias)
+  dataSource: MatTableDataSource<RegistroTalleresDTO> = new MatTableDataSource<RegistroTalleresDTO>(this.registroTalleresDTO);
 
-  formDatosTallerista: FormGroup;
-  formAsegurado: FormGroup;
-  formTallerDet: FormGroup;
 
+  personas = [] as any;
 
   constructor(
     private _formBuilder: FormBuilder,
+    private _unidadOperativaService: UnidadOperativaService,
     private _talleresService: TalleresService,
     private _personaService: PersonaService,
-    private _unidadOperativaService: UnidadOperativaService,
     private _tallerHorariosCabService: TallerHorariosCabService,
     private _tallerHorariosDetService: TallerHorariosDetService,
     private _parametroService: ParametroService,
-    private _aseguradoService: AseguradoService,
-    private _asistenciaService: AsistenciaService
+    private _snackBar: MatSnackBar,
+    private _dialog: MatDialog,
   ) { }
 
   ngOnInit(): void {
-    this.firstForm();
+    this.initForm();
+    this.listarUnidadesOperativasPadres();
     this.listarTalleres();
-    this.listarTalleristas();
+    this.listarModalidades();
     this.listarTipoDocumento();
   }
 
-  firstForm() {
-    this.formDatosTallerista = this._formBuilder.group({
-      tallerista: [null, [Validators.required]],
+  initForm() {
+    this.cabeceroForm = this._formBuilder.group({
+      unidadOperativa: [null, [Validators.required]],
+      usuario: [null],
+    });
+
+    this.tallerHorariosCabForm = this._formBuilder.group({
       taller: [null, [Validators.required]],
-      modalidad: [{value: null, disabled: true}],
-      fechaRegistro: [new Date(), [Validators.required]],
+      modalidad: [null, [Validators.required]],
+      fecInicio: [new Date(), [Validators.required]],
+      fecFin: [new Date(), [Validators.required]],
+      ciram: [null, [Validators.required]]
     });
 
-    this.formTallerDet = this._formBuilder.group({
-      horaTaller: [null, [Validators.required]]
-    });
-
-    this.formAsegurado = this._formBuilder.group({
-      tallerDet: [null, [Validators.required]],
+    this.personaForm = this._formBuilder.group({
       tipoDoc: [null, [Validators.required]],
       numDoc: [null, [Validators.required]],
-      asegurado: [null, [Validators.required]]
+      nombres: [null, [Validators.required]],
     });
+
+    this.tallerHorariosDetForm = this._formBuilder.group({
+      horaIni: [null, [Validators.required]],
+      horaFin: [null, [Validators.required]],
+      dia: [null, [Validators.required]],
+    });
+    this.personaForm.disable();
+    this.tallerHorariosDetForm.disable();
   }
 
-  listarTalleristas() {
-    this._personaService.listar().subscribe(data => {
-      this.talleristas = data
-      this.tallerista.setValue(data[0])
+  listarUnidadesOperativasPadres() {
+    this._unidadOperativaService.obtenerUnidadesOperativasPadres().subscribe(data => {
+      this.unidadesOperativas = data;
+      this.unidadOperativa.setValue(data[0]);//Se setea La primera unidad operativa padre
+      this.obtenerCiram();
     });
   }
 
@@ -100,32 +124,76 @@ export class ProgramacionTalleresComponent implements OnInit {
     this._talleresService.listar().subscribe(data => { this.talleres = data });
   }
 
-  buscarTaller() {
-    let taller: Talleres = this.taller.value;
-    let tallerista: Persona = this.tallerista.value;
-    let dia = moment(this.fechaRegistro.value).format('YYYY-MM-DD' + " 00:00:00");
+  listarModalidades() {
+    this._parametroService.listarModalidades().subscribe(data => { this.modalidades = data });
+  }
 
-    let buscarTallerCabDTO = new BuscarTallerCabDTO();
-    buscarTallerCabDTO.idTaller = taller.idTaller;
-    buscarTallerCabDTO.idTallerista = tallerista.idPersona;
-    buscarTallerCabDTO.dia = dia;
+  obtenerCiram() {
+    this.unidadesOperativasHijas = [];
 
-    this._tallerHorariosDetService.buscarPorTallerTalleristaFecha(buscarTallerCabDTO).subscribe(data => {
+    let unidadOperativa = this.unidadOperativa.value
+    this._unidadOperativaService.obtenerUnidadesOperativasHijas(unidadOperativa.idUnidadOperativa).subscribe(data => {
+      this.unidadesOperativasHijas = data;
 
-      if (data.length != 0) {
-        let idTallerHorarioCab = data[0].tallerHorarioCab.idTallerHorarioCab
-
-        this._tallerHorariosCabService.listarPorId(idTallerHorarioCab).subscribe(res => {
-          this.modalidad.setValue(res.modalidad);
-          this.tallerDetHoras = data
-          console.log(data);
-          console.log(res);
-        });
+      //Si la unidad operativa padre no tiene unidades operativas hijas se deshabilita el selector de "Ciram Asociado:"
+      if (data.length == 0) {
+        this.ciram.disable();
       } else {
-        this.tallerDetHoras = [];
-        this.modalidad.setValue(null);
+        this.ciram.enable();
+        this.ciram.setValue(null);
       }
     });
+  }
+
+  compararfechas() {
+    //Se pasa las hora al formato en el que se van a guardar para poder compararlas
+    let horaIni = moment(this.dia.value).format('YYYY-MM-DD ' + this.horaIni.value + ":00");
+    let horaFin = moment(this.dia.value).format('YYYY-MM-DD ' + this.horaFin.value + ":00");
+
+    let fecInicio = moment(this.fecInicio.value).format('YYYY-MM-DD' + " 00:00:00");
+    let fecFin = moment(this.fecFin.value).format('YYYY-MM-DD' + " 00:00:00");
+    let dia = moment(this.dia.value).format('YYYY-MM-DD' + " 00:00:00");
+
+    //Se comprueba la "Fecha de Inicio:" y la "Fecha de Fin:"
+    if (this.fecInicio.value > this.fecFin.value) {
+      this.flatFecha = true;
+      this._snackBar.open("La fecha de inicio no puede ser mayor que la fecha de fin", "❌", {
+        verticalPosition: "top",
+        horizontalPosition: "right"
+      });
+      return
+    } else {
+      this._snackBar.dismiss();
+      this.flatFecha = false;
+    }
+    //Si el  "this.dia.value == null" es por que no se le ha dado en el boton "AGREGAR" el cual tiene la funcion de iniciar la fecha del dia
+    //de esa forma se evita que se muestren los mensajes de abajo ya que seran invalidos para la comparacion
+    if (this.dia.value == null) { return }
+    //Para evitar comportamientos no deseados se termina la secuencia cuando la hora de inicio o hora de fin del taller son null
+    if (this.horaIni.value == null || this.horaFin.value == null) { return }
+
+    //Se comprueba la "Hora Inicio de Talle:" y la "Hora Fin de Talle:"
+    if (horaIni >= horaFin) {
+      this.flatBotonAgregarHorario = true;
+      this._snackBar.open("La hora de inicio del taller debe ser menor que la hora de fin del taller", "❌", {
+        verticalPosition: "top",
+        horizontalPosition: "right"
+      });
+    } else {
+      this._snackBar.dismiss();
+      this.flatBotonAgregarHorario = false;
+    }
+  }
+
+  agregar() {
+    let taller = this.taller.value
+    this.tallerEtiqueta = taller.codTaller
+
+    this.personaForm.enable();
+    this.flatBotonBuscar = false;
+    this.tallerHorariosDetForm.enable();
+    this.flatBotonAgregarHorario = false;
+    this.dia.setValue(this.fecInicio.value);
   }
 
   listarTipoDocumento() {
@@ -134,106 +202,178 @@ export class ProgramacionTalleresComponent implements OnInit {
     });
   }
 
-  buscarAsegurado() {
+  buscar() {
     let tipoDoc = this.tipoDoc.value
     let numDoc = this.numDoc.value
 
-    this._aseguradoService.findByTipoDocAndNumDoc(tipoDoc.idParametro, numDoc).subscribe(data => {
-      this.formAsegurado.reset();
-      let nombreApellido = `${data.nombres} ${data.apellidoPaterno} ${data.apellidoMaterno}`;
-      this.asegurado.setValue(nombreApellido);
-      this.aseguradoEncontrado = data;
+    this._personaService.findByTipoDocAndNumDoc(tipoDoc, numDoc).subscribe(data => {
+      this.personaForm.reset();
+      let nombreApellido = `${data.nombres} ${data.apePaterno} ${data.apeMaterno}`;
+      this.nombres.setValue(nombreApellido);
+      this.nombreApellido = nombreApellido;
+      this.personaCab = data;
     }, error => {
-      if (error.status == 400 ) { console.log(error.error.mensaje) }
+      if (error.status == 400) {
+        this._snackBar.open("Persona no encontrada", "❌", {
+          duration: 2000,
+          verticalPosition: "top",
+          horizontalPosition: "right"
+        });
+      }
     });
   }
 
-  agregar() {
-    let rawValues = this.formDatosTallerista.getRawValue();
+  agregarHorario() {
+    let horariosTalleres = new RegistroTalleresDTO();
+    let tallerHorariosCab = new TallerHorariosCab();
+    let tallerHorariosDet = new TallerHorariosDet();
 
-    let tallerDet = new TallerHorariosDet();
-    tallerDet = this.horaTaller.value;
+    let talleres = new Talleres();
+    talleres = this.taller.value;
 
-    let asegurado = new Asegurado();
-    asegurado = this.aseguradoEncontrado;
-    asegurado.tipoDocumento = rawValues.modalidad;
+    let persona = new Persona();
+    persona = this.personaCab
 
-    let asistencia = new Asistencia();
-    asistencia.asegurado = asegurado;
-    asistencia.tallerDet = tallerDet;
+    let unidadOperativa = new UnidadOperativa();
+    if (this.unidadesOperativasHijas.length == 0) {
+      unidadOperativa = this.unidadOperativa.value;
+    } else {
+      unidadOperativa = this.ciram.value;
+    }
 
-    this.asistencias.push(asistencia);
+    tallerHorariosCab.taller = talleres;
+    tallerHorariosCab.persona = persona;
+    tallerHorariosCab.unidadOperativa = unidadOperativa;
+    tallerHorariosCab.modalidad = this.modalidad.value;
+    tallerHorariosCab.fecInicio = moment(this.fecInicio.value).format('YYYY-MM-DD' + " 00:00:00");
+    tallerHorariosCab.fecFin = moment(this.fecFin.value).format('YYYY-MM-DD' + " 00:00:00");
 
-    this.dataSource = new MatTableDataSource(this.asistencias);
+    tallerHorariosDet.horaIni = moment(this.dia.value).format('YYYY-MM-DD ' + this.horaIni.value + ":00");
+    tallerHorariosDet.horaFin = moment(this.dia.value).format('YYYY-MM-DD ' + this.horaFin.value + ":00");
+    tallerHorariosDet.dia = moment(this.dia.value).format('YYYY-MM-DD' + " 00:00:00");
+    tallerHorariosDet.tallerHorarioCab = new TallerHorariosCab();
 
-    this.formAsegurado.reset();
-    this.formTallerDet.reset();
+    horariosTalleres.tallerHorariosCab = tallerHorariosCab;
+    horariosTalleres.tallerHorariosDet = tallerHorariosDet;
+
+    this.registroTalleresDTO.push(horariosTalleres);
+
+    this.dataSource = new MatTableDataSource(this.registroTalleresDTO);
+
+    this.nombreApellido = "";
+    let dia = this.dia.value
+    this.personaForm.reset();
+    this.tallerHorariosDetForm.reset();
+    this.dia.setValue(dia);
   }
 
   eliminar(i: number) {
-    this.asistencias = this.asistencias.filter((value, index) => {
+    this.registroTalleresDTO = this.registroTalleresDTO.filter((value, index) => {
       return index !== i;
     });
-    this.dataSource = new MatTableDataSource(this.asistencias);
+
+    this.dataSource = new MatTableDataSource(this.registroTalleresDTO);
   }
 
-  guardarAsistencia() {
-    let asistenciaRequest = new Asistencia();
+  guardarProgramacion() {
+    let dialogRef = this._dialog.open(DialogConfirmacionComponent, {
+      data: "¿Esta seguro de registrar la Programación de Talleres?"
+    });
 
-    for (let asistencia of this.asistencias) {
+    dialogRef.afterClosed().subscribe(res => {
+      if (res) {
 
-      let tallerDet = new TallerHorariosDet();
-      tallerDet.idTallerDet = asistencia.tallerDet.idTallerDet
+        for (let dto of this.registroTalleresDTO) {
 
-      let asegurado = new Asegurado();
-      asegurado.idAsegurado = asistencia.asegurado.idAsegurado
+          this._tallerHorariosCabService.registrar(dto.tallerHorariosCab).subscribe(resCab => {
 
-      asistenciaRequest.tallerDet = tallerDet
-      asistenciaRequest.asegurado = asegurado
+            dto.tallerHorariosDet.tallerHorarioCab.idTallerHorarioCab = resCab.idTallerHorarioCab
 
-      this._asistenciaService.registrar(asistenciaRequest).subscribe(data => {
-        console.log(data);
-      });
-    }
+            this._tallerHorariosDetService.registrar(dto.tallerHorariosDet).subscribe(resdet => {
+            });
+          });
+        }
+
+      }
+    });
+
+  }
+  resetearforms() {
+    this.tallerEtiqueta = "-------------------------"
+    this.flatBotonBuscar = true;
+    this.flatBotonAgregarHorario = true;
+
+    this.personaForm.reset();
+    this.tallerHorariosDetForm.reset();
+
+    this.personaForm.disable();
+    this.tallerHorariosDetForm.disable();
+    this._snackBar.dismiss();
   }
 
   salir() {
 
   }
 
-  // ------------------------------ get formDatosTallerista ------------------------------
-  get tallerista() {
-    return this.formDatosTallerista.get("tallerista")!
+  // ------------------------------ get cabeceroForm ------------------------------
+  get unidadOperativa() {
+    return this.cabeceroForm.get("unidadOperativa")!
+  }
+
+  get usuario() {
+    return this.cabeceroForm.get("usuario")!
+  }
+
+  // ------------------------------ get tallerHorariosCabForm ------------------------------
+  get persona() {
+    return this.tallerHorariosCabForm.get("persona")!
   }
 
   get taller() {
-    return this.formDatosTallerista.get("taller")!
+    return this.tallerHorariosCabForm.get("taller")!
   }
 
   get modalidad() {
-    return this.formDatosTallerista.get("modalidad")!
+    return this.tallerHorariosCabForm.get("modalidad")!
   }
 
-  get fechaRegistro() {
-    return this.formDatosTallerista.get("fechaRegistro")!
+  get fecInicio() {
+    return this.tallerHorariosCabForm.get("fecInicio")!
   }
 
-  // ------------------------------ get formTallerDet ------------------------------
-  get horaTaller() {
-    return this.formTallerDet.get("horaTaller")!
+  get fecFin() {
+    return this.tallerHorariosCabForm.get("fecFin")!
   }
 
-  // ------------------------------ get formAsegurado ------------------------------
+  get ciram() {
+    return this.tallerHorariosCabForm.get("ciram")!
+  }
+
+  // ------------------------------ get personaForm ------------------------------
   get tipoDoc() {
-    return this.formAsegurado.get("tipoDoc")!
+    return this.personaForm.get("tipoDoc")!
   }
 
   get numDoc() {
-    return this.formAsegurado.get("numDoc")!
+    return this.personaForm.get("numDoc")!
   }
 
-  get asegurado() {
-    return this.formAsegurado.get("asegurado")!
+  get nombres() {
+    return this.personaForm.get("nombres")!
+  }
+
+  // ------------------------------ get tallerHorariosCabForm ------------------------------
+  get horaIni() {
+    return this.tallerHorariosDetForm.get("horaIni")!
+  }
+
+  get horaFin() {
+    return this.tallerHorariosDetForm.get("horaFin")!
+  }
+
+  get dia() {
+    return this.tallerHorariosDetForm.get("dia")!
   }
 
 }
+
